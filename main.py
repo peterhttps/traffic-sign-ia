@@ -1,28 +1,22 @@
 import numpy as np
-import pandas as pd
 import os
 import cv2
-import matplotlib.pyplot as plt
-import tensorflow as tf
 from tensorflow import keras
 from PIL import Image
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.optimizers import Adam
-from sklearn.metrics import accuracy_score
-np.random.seed(42)
 
-train_path = 'Train'
-test_path = 'Test'
+trainPath = 'Train'
 
 IMG_HEIGHT = 30
 IMG_WIDTH = 30
 channels = 3
 
-NUM_CATEGORIES = len(os.listdir(train_path))
+NUM_CATEGORIES = len(os.listdir(trainPath))
 
-image_data = []
-image_labels = []
+imageData = []
+imageLabels = []
 
 for i in range(NUM_CATEGORIES):
     path = 'Train/' + str(i)
@@ -31,40 +25,31 @@ for i in range(NUM_CATEGORIES):
     for img in images:
         try:
             image = cv2.imread(path + '/' + img)
-            image_fromarray = Image.fromarray(image, 'RGB')
-            resize_image = image_fromarray.resize((IMG_HEIGHT, IMG_WIDTH))
-            image_data.append(np.array(resize_image))
-            image_labels.append(i)
+            imageFromArray = Image.fromarray(image, 'RGB')
+            resizedImage = imageFromArray.resize((IMG_HEIGHT, IMG_WIDTH))
+            imageData.append(np.array(resizedImage))
+            imageLabels.append(i)
         except:
-            print("Error in " + img)
+            print("Error image " + img)
 
-# Changing the list to numpy array
-image_data = np.array(image_data)
-image_labels = np.array(image_labels)
+imageData = np.array(imageData)
+imageLabels = np.array(imageLabels)
 
-print(image_data.shape, image_labels.shape)
+shuffleIndexes = np.arange(imageData.shape[0])
+np.random.shuffle(shuffleIndexes)
+imageData = imageData[shuffleIndexes]
+imageLabels = imageLabels[shuffleIndexes]
 
-shuffle_indexes = np.arange(image_data.shape[0])
-np.random.shuffle(shuffle_indexes)
-image_data = image_data[shuffle_indexes]
-image_labels = image_labels[shuffle_indexes]
-
-# ister éguí
-X_train, X_val, y_train, y_val = train_test_split(image_data, image_labels, test_size=0.3, random_state=42, shuffle=True)
+X_train, X_test, y_train, y_test = train_test_split(imageData, imageLabels, test_size=0.3, random_state=42, shuffle=True)
 
 X_train = X_train/255 
-X_val = X_val/255
-
-print("X_train.shape", X_train.shape)
-print("X_valid.shape", X_val.shape)
-print("y_train.shape", y_train.shape)
-print("y_valid.shape", y_val.shape)
+X_test = X_test/255
 
 y_train = keras.utils.to_categorical(y_train, NUM_CATEGORIES)
-y_val = keras.utils.to_categorical(y_val, NUM_CATEGORIES)
+y_test = keras.utils.to_categorical(y_test, NUM_CATEGORIES)
 
 print(y_train.shape)
-print(y_val.shape)
+print(y_test.shape)
 
 model = keras.models.Sequential([    
     keras.layers.Conv2D(filters=16, kernel_size=(3,3), activation='relu', input_shape=(IMG_HEIGHT,IMG_WIDTH,channels)),
@@ -85,10 +70,10 @@ model = keras.models.Sequential([
     keras.layers.Dense(43, activation='softmax')
 ])
 
-lr = 0.001
-epochs = 30
+learningRate = 0.001
+epochs = 100
 
-opt = Adam(lr=lr, decay=lr / (epochs * 0.5))
+opt = Adam(lr=learningRate, decay=learningRate / (epochs * 0.5))
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 aug = ImageDataGenerator(
@@ -101,6 +86,6 @@ aug = ImageDataGenerator(
     vertical_flip=False,
     fill_mode="nearest")
 
-history = model.fit(aug.flow(X_train, y_train, batch_size=32), epochs=epochs, validation_data=(X_val, y_val))
+history = model.fit(aug.flow(X_train, y_train, batch_size=32), epochs=epochs, validation_data=(X_test, y_test))
 
 model.save("model.h5")
