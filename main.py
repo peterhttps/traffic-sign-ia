@@ -86,7 +86,7 @@ model = keras.models.Sequential([
 ])
 
 lr = 0.001
-epochs = 30
+epochs = 100
 
 opt = Adam(lr=lr, decay=lr / (epochs * 0.5))
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])

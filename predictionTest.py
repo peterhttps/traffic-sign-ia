@@ -19,7 +19,7 @@ channels = 3
 model_path = "model.h5"
 loaded_model = tf.keras.models.load_model(model_path)
 
-image = cv2.imread("sessenta.png")
+image = cv2.imread("60.jpg")
 
 image_fromarray = Image.fromarray(image, 'RGB')
 resize_image = image_fromarray.resize((30, 30))
